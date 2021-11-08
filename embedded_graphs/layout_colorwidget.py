@@ -1,3 +1,8 @@
+# Martin Fitzpatrick, Listing 22
+
+# Solid-color widget that can be used to explore
+# layouts a bit more easily
+
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QWidget
 
