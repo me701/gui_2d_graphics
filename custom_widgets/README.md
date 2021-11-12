@@ -60,7 +60,15 @@ Use the cards like this for all tasks below.
       for a hands on example of what we are trying to do!)
 
      
+## For Further Study
 
+To see an example of a `QPainter`-enhanced widget, checkout out MF Chapter 30 and
+the "PowerBar meter" example.  Like our current application, this widget is really 
+a combination of existing widgets and a custom "paint job" but the purpose is
+more display and less interaction.
+
+Also, checkout out MF page 475 and the concept 
+of [skeuomorphism](https://en.wikipedia.org/wiki/Skeuomorph).
 
 
 
