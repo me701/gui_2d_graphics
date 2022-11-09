@@ -12,9 +12,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # QLabel is chosen as the central widget because
+        # it contains the pixmap attribute.
         self.label = QLabel()
-        canvas = QPixmap(400, 300)
-        canvas.fill(Qt.white)
+        canvas = QPixmap(500, 100)
+
+        canvas.load("./map.png")
         self.label.setPixmap(canvas)
         self.setCentralWidget(self.label)
         self.draw_something()
