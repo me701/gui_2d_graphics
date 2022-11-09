@@ -5,11 +5,16 @@ the user the plot it.
 
 import sys
 from PyQt5.QtWidgets import (QMainWindow, QAction, qApp, QApplication,
-    QMessageBox, QFileDialog, QTableWidget, QHBoxLayout, QVBoxLayout, 
+    QMessageBox, QFileDialog, QTableWidget, QTableWidgetItem,
+    QHBoxLayout, QVBoxLayout, 
     QWidget, QPushButton)
 from PyQt5.QtGui import  QIcon, QPixmap
 
 from layout_colorwidget import Color 
+
+from mpl_plot import MplCanvas
+
+import numpy as np
 
 class RunPlotter(QMainWindow):
 
@@ -46,7 +51,13 @@ class RunPlotter(QMainWindow):
         self.table = QTableWidget(100, 2)
 
         ## Create the "plot" widget
-        self.plot = Color("red")
+        self.plot = MplCanvas()
+
+        # Provide a default graph
+        x = np.linspace(0, 10, 100)
+        y = np.cos(x)
+        self.plot.plot(x, y)
+        self.plot.show()
         self.plot.setFixedSize(400,400)
 
         ## Create a button to plot and clear.
@@ -87,15 +98,61 @@ class RunPlotter(QMainWindow):
         box.show()
 
     def load_file(self):
-        file_name = QFileDialog.getOpenFileName(self, 'Open file')
+        file_name = QFileDialog.getOpenFileName(self, 'Open file')[0]
         # Do something with the file!  Like load it and set the table.
         self.statusBar().showMessage("You chose {}".format(file_name))
+        
+        # Load the data with numpy, assuming CSV
+        x, y = np.loadtxt(file_name, delimiter=',', unpack=True)
+        self._set_column(0, x)
+        self._set_column(1, y)
 
     def update_plot(self):
-        pass 
+        """Update the plot with whatever data lives in the table.
+
+        Note, check out 
+          https://www.pythonguis.com/tutorials/plotting-matplotlib/
+        for more on updating Matplotlib plots.
+
+        Here, we use the "clear" then "draw" approach.
+        """
+
+        # Extract data from table
+        x = self._extract_column(0)
+        y = self._extract_column(1)
+
+        # Update the plot
+        self.plot.axes.cla()
+        self.plot.axes.plot(x, y, 'r')
+        self.plot.draw()
 
     def clear_plot(self):
-        pass
+        self.plot.axes.clear()
+        self.plot.draw()
+
+    def _extract_column(self, j):
+        """Extract values from column j as np array.
+        
+        Note, the underscore prefix suggests that this is a method to be 
+        used only inside this class, i.e., it isn't part of the interface
+        for users.
+        """
+        n = self.table.rowCount()
+        vals = []
+        for i in range(n):
+            # quit if we've hit an empty cell.  assume
+            # no data after this cell.
+            if self.table.item(i, 0) is None:
+                break
+            vals.append(float(self.table.item(i, j).text()))
+        return np.array(vals) 
+
+    def _set_column(self, j, vals):
+        """Set column j to vals."""
+        n = len(vals)
+        self.table.setRowCount(n)
+        for i in range(n):
+            self.table.setItem(i, j, QTableWidgetItem(str(vals[i])))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
