@@ -120,6 +120,8 @@ class RunPlotter(QMainWindow):
         # Extract data from table
         x = self._extract_column(0)
         y = self._extract_column(1)
+        #x = np.linspace(0, 10, 100)
+        #y = np.sin(x)
 
         # Update the plot
         self.plot.axes.cla()
@@ -142,7 +144,7 @@ class RunPlotter(QMainWindow):
         for i in range(n):
             # quit if we've hit an empty cell.  assume
             # no data after this cell.
-            if self.table.item(i, 0) is None:
+            if self.table.item(i, j).text() == "":
                 break
             vals.append(float(self.table.item(i, j).text()))
         return np.array(vals) 
