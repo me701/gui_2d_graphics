@@ -9,10 +9,13 @@ from PyQt5.QtWidgets import (QMainWindow, QAction, qApp, QApplication,
     QHBoxLayout, QVBoxLayout, 
     QWidget, QPushButton)
 from PyQt5.QtGui import  QIcon, QPixmap
+from PyQt5.QtCore import Qt 
 
-from layout_colorwidget import Color 
+#sys.path.append("../embedded_graphs")
+#from layout_colorwidget import Color 
+#from mpl_plot import MplCanvas
 
-from mpl_plot import MplCanvas
+from paint import Canvas
 
 import numpy as np
 
@@ -24,10 +27,10 @@ class RunPlotter(QMainWindow):
 
     def initUI(self):
 
-        openAct = QAction('&Open', self)
+        openAct = QAction('&Save', self)
         openAct.setShortcut('Ctrl+O')
-        openAct.setStatusTip('Open file')
-        openAct.triggered.connect(self.load_file)
+        openAct.setStatusTip('Save file')
+        openAct.triggered.connect(self.save_file)
 
         exitAct = QAction('&Exit', self)
         exitAct.setShortcut('Ctrl+Q')
@@ -50,23 +53,15 @@ class RunPlotter(QMainWindow):
         ## Create the spreadsheet
         self.table = QTableWidget(10, 2)
 
-        ## Create the "plot" widget
-        self.plot = MplCanvas()
-        self.plot.setFixedSize(400, 400)
-
-        # Provide a default graph
-        x = np.linspace(0, 10, 10)
-        y = np.cos(x)
-        self._set_column(0, x)
-        self._set_column(1, y)
-
-        self.update_plot()
+        ## Create the "canvas" widget
+        self.imgfile = "data.png"
+        self.canvas = Canvas(self.imgfile, parent=self)
 
         ## Create a button to plot and clear.
-        self.button_plot = QPushButton("Plot")
-        self.button_clear = QPushButton("Clear")
-        self.button_plot.clicked.connect(self.update_plot)
-        self.button_clear.clicked.connect(self.clear_plot)
+        self.button_transfer = QPushButton("Transfer Data")
+        self.button_clear = QPushButton("Clear Data")
+        self.button_transfer.clicked.connect(self.transfer_data)
+        self.button_clear.clicked.connect(self.clear_data)
 
         #--------------------------#
         #  Spread   | pretty       |
@@ -76,11 +71,13 @@ class RunPlotter(QMainWindow):
         # -------------------------#
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self.button_plot)
+        button_layout.addWidget(self.button_transfer)
         button_layout.addWidget(self.button_clear)
 
         right_side_layout = QVBoxLayout()
-        right_side_layout.addWidget(self.plot)
+        right_side_layout.setAlignment(Qt.AlignTop)
+       
+        right_side_layout.addWidget(self.canvas)
         right_side_layout.addLayout(button_layout)
 
         layout = QHBoxLayout()
@@ -95,42 +92,33 @@ class RunPlotter(QMainWindow):
         box = QMessageBox(self)
         message = "This is a text.\n\n"
         message+= "Nothing to see here.\n\n"
-        message+= "© 2021 the powers that be."
+        message+= "© 2022 the powers that be."
         box.setText(message)
         box.show()
 
-    def load_file(self):
-        file_name = QFileDialog.getOpenFileName(self, 'Open file')[0]
+    def save_file(self):
+        file_name = QFileDialog.getSaveFileName(self, 'Open file')[0]
         # Do something with the file!  Like load it and set the table.
         self.statusBar().showMessage("You chose {}".format(file_name))
         
         # Load the data with numpy, assuming CSV
-        x, y = np.loadtxt(file_name, delimiter=',', unpack=True)
+        x = self._extract_column(0)
+        y = self._extract_column(1)
+        data = np.array([x, y]).T
+        np.savetxt(file_name, data, delimiter=',')
+
+    def transfer_data(self):
+        """Take canvased data and move to the table."""
+        x, y = self.canvas.points()
+        self.table.setRowCount(len(x))
         self._set_column(0, x)
         self._set_column(1, y)
 
-    def update_plot(self):
-        """Update the plot with whatever data lives in the table.
-
-        Note, check out 
-          https://www.pythonguis.com/tutorials/plotting-matplotlib/
-        for more on updating Matplotlib plots.
-
-        Here, we use the "cla" then "draw" approach.
-        """
-        # Extract data from table
-        x = self._extract_column(0)
-        y = self._extract_column(1)
-
-        # Update the plot
-        self.plot.axes.cla()
-        self.plot.axes.plot(x, y, 'r')
-        self.plot.draw()
-
-    def clear_plot(self):
-        self.plot.axes.clear()
-        self.plot.draw()
-
+    def clear_data(self):
+        """Clear the table and the lines."""
+        self.table.clearContents()
+        self.canvas.clear()
+       
     def _extract_column(self, j):
         """Extract values from column j as np array.
         

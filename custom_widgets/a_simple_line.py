@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel)
 from PyQt5.QtGui import (QPixmap, QPainter, QFont)
 from PyQt5.QtCore import Qt 
 
+from paint import Canvas
 
 class MainWindow(QMainWindow):
 
@@ -15,16 +16,12 @@ class MainWindow(QMainWindow):
         # QLabel is chosen as the central widget because
         # it contains the pixmap attribute.
         self.setWindowTitle("The Ring to Rule Them All.")
-        self.label = QLabel()
-        canvas = QPixmap(500, 100)
-
-        canvas.load("./map.png")
-        self.label.setPixmap(canvas)
-        self.setCentralWidget(self.label)
+        self.canvas = Canvas("../basic_bitmaps/map.png")
+        self.setCentralWidget(self.canvas)
         self.draw_something()
 
     def draw_something(self):
-        painter = QPainter(self.label.pixmap())
+        painter = QPainter(self.canvas.pixmap())
         # draw the path
         painter.setPen(Qt.red)
         p = painter.pen()
